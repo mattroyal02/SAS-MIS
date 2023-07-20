@@ -1,0 +1,17 @@
+{
+    "idQuoteHistory": 1,
+    "t_stamp": "2022-08-25T10:09:01.000Z",
+    "quote_num": null,
+    "quote_total": "R50000",
+    "quote_products": "AB1, AB2, AB5",
+    "quote_comments": "Hello world, by Testing 1",
+    "quote_approval": "PENDING",
+    "quote_id": "e71b1ced-30ce-4319-920c-1861f6ce75c6",
+    "username": "mattheus.royal@gmail.com",
+    "quote_total_incVAT": "50245",
+    "discount": 0,
+    "quote_suppliers": "",
+    "quote_handler": "",
+    "quote_approval_date": "",
+    "quote_outcome_reason": ""
+}

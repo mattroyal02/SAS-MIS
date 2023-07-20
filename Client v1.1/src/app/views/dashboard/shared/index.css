@@ -1,0 +1,56 @@
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  font-weight: bold;
+  border: none;
+}
+
+.cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.datagrid .MuiDataGrid-columnSeparator {
+  display: none;
+}
+
+.datagrid .MuiDataGrid-cell {
+  border-bottom: none;
+}
+
+.footer {
+  text-align: center;
+  color: "white";
+}
+
+.datagrid .MuiDataGrid-columnSeparator {
+  display: none;
+}
+
+.datagrid .MuiDataGrid-checkboxInput {
+  color: white;
+}
+
+.datagrid .MuiDataGrid-footerContainer {
+  color: white;
+}
+
+.MuiDataGrid-sortIcon {
+  color: white;
+}
+
+.MuiDataGrid-menuIcon{
+    color:white;
+}
+
+.MuiDataGrid-footerContainer{
+    color:white;
+}
+
+.MuiDataGrid-iconButtonContainer{
+    color:white;
+}

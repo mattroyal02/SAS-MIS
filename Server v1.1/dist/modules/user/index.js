@@ -1,0 +1,36 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.getNumberOfGuests = exports.getNumberOfUsers = exports.updateUser = exports.routeUser = exports.getUser = exports.getUsers = exports.logoutUser = exports.loginUser = exports.registerUser = void 0;
+const attemptCode_1 = __importDefault(require("./attemptCode"));
+const getNumberOfGuests_1 = __importDefault(require("./getNumberOfGuests"));
+exports.getNumberOfGuests = getNumberOfGuests_1.default;
+const getNumberOfUsers_1 = __importDefault(require("./getNumberOfUsers"));
+exports.getNumberOfUsers = getNumberOfUsers_1.default;
+const getUser_1 = __importDefault(require("./getUser"));
+exports.getUser = getUser_1.default;
+const getUsers_1 = __importDefault(require("./getUsers"));
+exports.getUsers = getUsers_1.default;
+const login_1 = __importDefault(require("./login"));
+exports.loginUser = login_1.default;
+const logout_1 = __importDefault(require("./logout"));
+exports.logoutUser = logout_1.default;
+const register_1 = __importDefault(require("./register"));
+exports.registerUser = register_1.default;
+const updateUser_1 = __importDefault(require("./updateUser"));
+exports.updateUser = updateUser_1.default;
+const routeUser = (app, io) => {
+    app.post("/register", register_1.default);
+    app.post("/login", login_1.default);
+    app.post("/logout", logout_1.default);
+    app.post("/attempt", async (req, res) => (0, attemptCode_1.default)(req, res, io));
+    app.get("/users", getUsers_1.default);
+    app.get("/users/:id", getUser_1.default);
+    app.get("/me", getUser_1.default);
+    app.put("/users/:id", updateUser_1.default);
+    app.get("/numberOfUsers", getNumberOfUsers_1.default);
+    app.get("/numberOfGuests", getNumberOfGuests_1.default);
+};
+exports.routeUser = routeUser;

@@ -1,0 +1,42 @@
+.des .description{
+  background-color: #7664a6;
+  padding: 20px 0px 20px 20px;    /* top right bottom left*/
+  color: azure;
+  display: inline-block;
+  vertical-align: middle;
+  
+}
+.centering{
+  align-items: center;
+  justify-content: center;
+}
+.description{
+  background-color: rgba(52,49,76,1);
+  padding: 20px 0px 20px 20px;    /* top right bottom left*/
+  color: azure;
+}
+
+
+.MuiCardHeader-title{
+  color: black;
+}
+
+.MuiCardHeader-subheader{
+  color:blueviolet
+}
+
+.MuiIconButton-colorSecondary{
+  color: black;
+}
+.MuiIconButton-colorPrimary{
+  color: red;
+}
+
+.MuiIconButton-colorInherit{
+  color: bisque;
+}
+
+.MuiButton-containedInherit{
+  color: white;
+  background-color:#7664a6;
+}

@@ -1,0 +1,146 @@
+[
+  {
+    "id": "1",
+    "title": "abbexa",
+    "image": "../assets/images/cards/abbexa.png",
+    "link": "https://www.abbexa.com/",
+    "__typename": "Movie"
+  },
+  {
+    "id": "2",
+    "title": "Abcam",
+    "image": "../assets/images/cards/abcam.png",
+    "link": "https://www.abcam.com/",
+    "__typename": "Movie"
+  },
+  {
+    "id": "3",
+    "title": "Abclonal",
+    "image": "../assets/images/cards/abclonal.png",
+    "link": "https://abclonal.com/",
+    "__typename": "Movie"
+  },
+  {
+    "id": "4",
+    "title": "Abnova",
+    "image": "../assets/images/cards/abnova.png",
+    "link": "https://www.abnova.com/",
+    "__typename": "Movie"
+  },
+
+  {
+    "id": "5",
+    "title": "Agrisera",
+    "image": "../assets/images/cards/agrisera.png",
+    "link": "https://www.agrisera.com/",
+    "__typename": "Movie"
+  },
+  {
+    "id": "6",
+    "title": "Alzet",
+    "image": "../assets/images/cards/alzet.png",
+    "link": "https://www.alzet.com/",
+    "__typename": "Movie"
+  },
+
+  {
+    "id": "7",
+    "title": "Bethyl/Fortis",
+    "image": "../assets/images/cards/bethyl.png",
+    "link": "https://www.fortislife.com/bethyl-laboratories",
+    "__typename": "Movie"
+  },
+
+  {
+    "id": "8",
+    "title": "BioAssay Systems",
+    "image": "../assets/images/cards/bioessay.png",
+    "link": "https://www.bioassaysys.com/",
+    "__typename": "Movie"
+  },
+  {
+    "id": "9",
+    "title": "BioLegend",
+    "image": "../assets/images/cards/biolegend.png",
+    "link": "https://www.biolegend.com/en-us/kiravia",
+    "__typename": "Movie"
+  },
+  {
+    "id": "10",
+    "title": "Biomedica Gruppe",
+    "image": "../assets/images/cards/biomedica.png",
+    "link": "https://www.bmgrp.com/",
+    "__typename": "Movie"
+  },
+
+  {
+    "id": "11",
+    "title": "BioVendor",
+    "image": "../assets/images/cards/biovendor.png",
+    "link": "https://www.biovendor.com/",
+    "__typename": "Movie"
+  },
+  {
+    "id": "12",
+    "title": "Capricorn",
+    "image": "../assets/images/cards/capricorn.png",
+    "link": "https://www.capricorn-scientific.com/en",
+    "__typename": "Movie"
+  },
+  {
+    "id": "13",
+    "title": "CrystalChem",
+    "image": "../assets/images/cards/crystalchem.png",
+    "link": "https://www.crystalchem.com/",
+    "__typename": "Movie"
+  },
+  {
+    "id": "14",
+    "title": "Curiosis",
+    "image": "../assets/images/cards/curiosis.png",
+    "link": "https://www.curiosis.com/",
+    "__typename": "Movie"
+  },
+  {
+    "id": "15",
+    "title": "Cytoskeleton",
+    "image": "../assets/images/cards/cytoskeleton.png",
+    "link": "https://www.cytoskeleton.com/",
+    "__typename": "Movie"
+  },
+  {
+    "id": "16",
+    "title": "FineTest",
+    "image": "../assets/images/cards/finetest.png",
+    "link": "https://www.fn-test.com/",
+    "__typename": "Movie"
+  },
+  {
+    "id": "17",
+    "title": "Biologix",
+    "image": "../assets/images/cards/biologix.png",
+    "link": "http://www.biologixgroup.com/",
+    "__typename": "Movie"
+  },
+  {
+    "id": "18",
+    "title": "Bio Basic Inc",
+    "image": "../assets/images/cards/biobasic.png",
+    "link": "https://www.biobasic.com/",
+    "__typename": "Movie"
+  },
+  {
+    "id": "18",
+    "title": "Bio Basic Inc",
+    "image": "../assets/images/cards/biobasic.png",
+    "link": "https://www.biobasic.com/",
+    "__typename": "Movie"
+  },
+  {
+    "id": "20",
+    "title": "Miltenyi",
+    "image": "../assets/images/cards/miltenyi.png",
+    "link": "https://www.miltenyibiotec.com/US-en/",
+    "__typename": "Movie"
+  }
+]

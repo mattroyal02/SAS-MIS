@@ -1,0 +1,75 @@
+
+$(function() {
+	var $header = $('.header');
+	var $headerGnb = $('.header .gnb > ul > li');
+	var headerBgH = $('.sub_depth02').innerHeight();
+	
+	$('.m_cell .slide_wrap .slide_ctn .item figure a').on('click', function(){
+		sessionStorage.setItem('chk', 1);
+	})
+	window.onpageshow = function(event) {
+		if ( event.persisted || (window.performance && window.performance.navigation.type == 2)) {
+		   var idx = location.pathname;
+		   if(sessionStorage.getItem('chk') == 1){
+				$.fn.fullpage.moveTo(3);
+				sessionStorage.removeItem('chk')
+		   }
+		}
+	}
+	function preloading(imageArray) {
+		var n = imageArray.length; 
+		for (var i = 0; i < n; i++) {
+			var img = new Image();
+			img.src = imageArray[i];
+		}
+	}
+	preloading([
+		'/img/sub/support01H.png',
+		'/img/sub/support02H.png',
+		'/img/sub/support03H.png',
+		'/img/sub/support04H.png',
+		'/img/sub/support05H.png',
+		'/img/sub/support06H.png'
+	])
+
+	$(window).on('load resize', function(){
+		headerBgH = $('.sub_depth02').innerHeight();
+		$(window).scroll(function(){
+			var sT = $(this).scrollTop()
+			if(sT > 10 && $(window).width() <= 1200){
+				$header.addClass('m_scroll')
+			} else{
+				$header.removeClass('m_scroll')
+			}
+		})
+	})
+	
+	$header.find('.bg').css('height', headerBgH);
+	$('.gnb > ul').clone().appendTo('.all_manu');
+
+	$('.s_btn').on('click', function(){
+		$('.header').toggleClass('search_on')
+	})
+
+	$('.m_btn').on('click', function(){
+		$(this).toggleClass('on')
+		$('.header .all_manu').toggleClass('on')
+	})
+
+	$('.header .all_manu > ul > li > a').on("click", function(e){
+		e.preventDefault()
+		$('.header .all_manu > ul > li').removeClass('on')
+		$('.header .all_manu > ul > li > a').next().stop().fadeOut()
+		$('.header .all_manu > ul > li > a').next().removeClass('on')
+		$(this).parent().addClass('on')
+		$(this).next().addClass('on')
+		$(this).next().stop().fadeIn()
+	})
+	$headerGnb.hover(function(){
+		$header.addClass('on hover')
+		$headerGnb.children().next().stop().slideDown()
+	}, function(){
+		$header.removeClass('on hover');
+		$headerGnb.children().next().stop().slideUp()
+	})
+});
