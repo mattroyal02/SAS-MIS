@@ -1,3 +1,4 @@
+import { makeStyles } from "@material-ui/core";
 import {
   Box,
   Card,
@@ -6,19 +7,30 @@ import {
   Grid,
   InputLabel,
   MenuItem,
+  Paper,
   Select,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
   TextField,
   Typography,
+  tableCellClasses,
 } from "@mui/material";
 import Button from "@mui/material/Button";
 import Step from "@mui/material/Step";
 import StepLabel from "@mui/material/StepLabel";
 import Stepper from "@mui/material/Stepper";
+import { styled } from "@mui/styles";
+import useAuth from "app/hooks/useAuth";
 import axios from "axios";
-import { Field, Form, Formik } from "formik";
+import { Field, FieldArray, Form, Formik } from "formik";
+import { DateTime } from "luxon";
 import { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
 import * as Yup from "yup";
-import useAuth from "../../hooks/useAuth";
 import DisplayCard from "./shared/DisplayCard";
 import StatCardGrandTotal from "./shared/StatCardGrandTotal";
 import StatCardTotal from "./shared/StatCardTotal";
@@ -31,6 +43,7 @@ const getSteps = () => {
     "Step 2: Bin Dips",
     "Step 3: Vitamin Totals",
     "Step 4: Production Totals Mill A",
+    "Step 5: Downtimes",
   ];
 };
 
@@ -275,9 +288,51 @@ let initialValues = {
   screeningPercentage: 0,
   //Dirty Maize
   dirtyMaize: 0,
+  //1st conditioning Water
+  conditioningWaterScada: 0,
+  conditioningWaterTotal1: 0,
+  conditioningWaterPercentage1: 0,
+  //2nd conditioningWater
+  conditioningWaterManual: 0,
+  conditioningWaterTotal2: 0,
+  conditioningWaterPercentage2: 0,
+  //cleanMaize
+  cleanMaizeScada: 0,
+  cleanMaizeTotal: 0,
+  cleanMaizePercentage: 0,
+  //Offal
+  offalScada: 0,
+  offalTotal: 0,
+  offalPercentage: 0,
+  //mixBack
+  mixbackA1: 0,
+  mixbackA2: 0,
+  mixbackA3: 0,
+  //mill a totals
+  totalProductA: 0,
+  totalProductPercentageA: 0,
+  totalMixbackA: 0,
+
+  //downtimes
+  downtimea: [],
+  downtimeb: [],
 };
 
 const StepOne = (props) => {
+  // console.log("start shift time", props.lastReport?.startShiftTime);
+
+  const luxonData = props.lastReport?.endShiftTime
+    ? DateTime.fromISO(props.lastReport?.endShiftTime)
+    : "";
+
+  // console.log("luxonData", luxonData);
+
+  const formattedStartTime = luxonData
+    ? luxonData.toFormat("yyyy-MM-dd hh:mm:ss")
+    : "";
+
+  // const formattedEndTime = DateTime.now().toFormat("yyyy-MM-dd hh:mm:ss");
+
   return (
     <Card>
       <Grid item md={6} xs={12}>
@@ -408,8 +463,11 @@ const StepOne = (props) => {
                 {...field}
                 fullWidth
                 type="datetime-local"
+                disabled
                 variant="outlined"
                 helperText="Start Shift Time"
+                value={formattedStartTime}
+                // value={"2023-12-23 12:23:43"}
               />
             )}
           </Field>
@@ -424,7 +482,9 @@ const StepOne = (props) => {
                 fullWidth
                 helperText="End Shift Time"
                 type="datetime-local"
+                disabled
                 variant="outlined"
+                value={props.formattedEndTime}
               />
             )}
           </Field>
@@ -475,7 +535,7 @@ const SelectField = ({ name, label, options }) => {
 const StepTwo = (props) => {
   const [options, setOptions] = useState([]);
 
-  console.log("props.values ===", props.values);
+  // console.log("props.values ===", props.values);
 
   useEffect(() => {
     const fetchOptions = async () => {
@@ -1834,7 +1894,7 @@ const StepTwo = (props) => {
 };
 
 const StepThree = (props) => {
-  console.log("step three ===", props.values);
+  // console.log("step three ===", props.values);
   return (
     <Card>
       <Grid item md={6} xs={12}>
@@ -2031,18 +2091,379 @@ const StepThree = (props) => {
 };
 
 const StepFour = (props) => {
+  const [previous, setPrevious] = useState([]);
+  //Getting downtimes
+  useEffect(() => {
+    const fetchDowntimes = async () => {
+      try {
+        const response = await axios.get(
+          `http://localhost:4050/downtimesRange?startTime=${props.formattedStartTime}&endTime=${props.formattedEndTime}`
+        );
+
+        console.log("downtime response", response.data);
+        props.setDowntimes(response.data.data);
+      } catch (error) {
+        console.error("Failed to fetch options:", error);
+      }
+    };
+
+    fetchDowntimes();
+  }, []);
+
+  // Previous Report
   useEffect(() => {
     const fetchPReviousReportValues = async () => {
       try {
         const response = await axios.get("http://localhost:4050/report/latest");
         console.log("REPORT ===", response.data.data);
-        props.setLastReport(response.data.data);
+        // setLastReport={setLastReport}props.setLastReport(response.data.data);
+        setPrevious(response.data.data);
       } catch (error) {
         console.error("Failed to fetch options:", error);
       }
     };
     fetchPReviousReportValues();
   }, []);
+
+  //Stylling Tables
+  const StyledTableCell = styled(TableCell)(({ theme }) => ({
+    [`&.${tableCellClasses.head}`]: {
+      // backgroundColor: theme.palette.common.black,
+      color: theme.palette.common.white,
+    },
+    [`&.${tableCellClasses.head}:first-child`]: {
+      paddingLeft: 15, // Left padding for the first header
+    },
+    [`&.${tableCellClasses.head}:last-child`]: {
+      paddingRight: 15, // Right padding for the last header
+    },
+    [`&.${tableCellClasses.body}`]: {
+      fontSize: 14,
+    },
+  }));
+
+  const StyledTableHead = styled(TableHead)(({ theme }) => ({
+    background: "linear-gradient(to right bottom, #93DA00, #00A880)",
+    color: theme.palette.common.white,
+  }));
+
+  const StyledBodyCell = styled(TableCell)(({ theme }) => ({
+    fontSize: 14,
+    paddingLeft: 15,
+    paddingRight: 15,
+  }));
+
+  const StyledTableRow = styled(TableRow)(({ theme }) => ({
+    "&:nth-of-type(odd)": {
+      backgroundColor: theme.palette.action.hover,
+    },
+    // hide last border
+    "&:last-child td, &:last-child th": {
+      border: 0,
+    },
+  }));
+
+  function createData(product, previous, scada, total, extraction) {
+    const extractionTemp = extraction || "";
+    return {
+      product,
+      previous,
+      scada,
+      total,
+      extractionTemp,
+    };
+  }
+  function createScaleProduct(product, sumOfDifferences, percentage) {
+    const product_ = product || "";
+    const sumOfDifferences_ = sumOfDifferences || "";
+    const percentage_ = percentage || "";
+    return {
+      product_,
+      sumOfDifferences_,
+      percentage_,
+    };
+  }
+
+  const rows = [
+    //Intake
+    createData(
+      "Intake",
+      `${previous?.intakeScada} kg`,
+      `${props.filteredIntakeScada()} kg`,
+      `${parseFloat(
+        props.filteredIntakeScada() - previous?.intakeScada,
+        10
+      ).toFixed(2)} kg`
+    ),
+    //Screening
+    createData(
+      "Screenings",
+      `${previous?.screeningScada} kg`,
+      `${props.filteredScreeningScada()} kg`,
+      `${parseFloat(
+        props.filteredScreeningScada() - previous?.screeningScada,
+        10
+      ).toFixed(2)} kg`,
+      `${(
+        (parseFloat(
+          props.filteredScreeningScada() - previous?.screeningScada,
+          10
+        ) /
+          parseFloat(props.filteredIntakeScada() - previous?.intakeScada, 10)) *
+        100
+      ).toFixed(2)} %`
+    ),
+
+    //Dirty Maize
+    createData(
+      "Dirty Maize",
+      "",
+      "",
+      `${(
+        parseFloat(props.filteredIntakeScada() - previous?.intakeScada, 10) +
+        previous?.sectionTotalE * 1000 -
+        (parseFloat(props.values?.metersMeasuredBinA1, 10) *
+          props.filterBin(24) +
+          parseFloat(props.values?.metersMeasuredBinA2, 10) *
+            props.filterBin(25) +
+          parseFloat(props.values?.metersMeasuredBinA3, 10) *
+            props.filterBin(26) +
+          parseFloat(props.values?.metersMeasuredBinA4, 10) *
+            props.filterBin(27)) *
+          1000
+      ).toFixed(2)} kg`,
+      ""
+    ),
+    //1s conditioning Water
+    createData(
+      "1st Conditioning Water",
+      `${previous?.conditioningWaterScada} L`,
+      `${props.filteredConditioningWaterScada()} L`,
+      `${parseFloat(
+        props.filteredConditioningWaterScada() -
+          previous?.conditioningWaterScada,
+        10
+      ).toFixed(2)} L`,
+      `${(
+        (parseFloat(
+          props.filteredConditioningWaterScada() -
+            previous?.conditioningWaterScada,
+          10
+        ) /
+          ((parseFloat(
+            props.filteredIntakeScada() - previous?.intakeScada,
+            10
+          ) /
+            3) *
+            2)) *
+        100
+      ).toFixed(2)} %`
+    ),
+    //2nd Conditioning water
+    createData(
+      "2nd Conditioning Water",
+      `${previous?.conditioningWaterManual} L`,
+      `${props.values.conditioningWaterManual} L`,
+      `${parseFloat(
+        props.values.conditioningWaterManual -
+          previous?.conditioningWaterManual,
+        10
+      ).toFixed(2)} L`,
+      `${(
+        (parseFloat(
+          props.values.conditioningWaterManual -
+            previous?.conditioningWaterManual,
+          10
+        ) /
+          ((parseFloat(
+            props.filteredIntakeScada() - previous?.intakeScada,
+            10
+          ) /
+            3) *
+            2)) *
+        100
+      ).toFixed(2)} %`
+    ),
+    //Clean Maize
+    createData(
+      "Clean Maize",
+      `${previous?.cleanMaizeScada} kg`,
+      `${props.filteredCleanMaizeScada()} kg`,
+      `${parseFloat(
+        props.filteredCleanMaizeScada() - previous?.cleanMaizeScada,
+        10
+      ).toFixed(2)} kg`,
+      `${(
+        (parseFloat(
+          props.filteredCleanMaizeScada() - previous?.cleanMaizeScada,
+          10
+        ) /
+          parseFloat(props.filteredIntakeScada() - previous?.intakeScada, 10)) *
+        100
+      ).toFixed(2)} %`
+    ),
+  ];
+
+  const scaleProduct = [
+    createScaleProduct(
+      "SUPER",
+      `${props.filterScaleProduct("SUPER").toFixed(2)} kg`,
+      `${(
+        (props.filterScaleProduct("SUPER") /
+          (props.filteredCleanMaizeScada() - previous?.cleanMaizeScada)) *
+        100
+      ).toFixed(2)} %`
+    ),
+    createScaleProduct(
+      "SPECIAL",
+      `${props.filterScaleProduct("SPECIAL").toFixed(2)} kg`,
+      `${(
+        (props.filterScaleProduct("SPECIAL") /
+          (props.filteredCleanMaizeScada() - previous?.cleanMaizeScada)) *
+        100
+      ).toFixed(2)} %`
+    ),
+    createScaleProduct(
+      "SUPER FINE",
+      `${props.filterScaleProduct("SUPER FINE").toFixed(2)} kg`,
+      `${(
+        (props.filterScaleProduct("SUPER FINE") /
+          (props.filteredCleanMaizeScada() - previous?.cleanMaizeScada)) *
+        100
+      ).toFixed(2)} %`
+    ),
+    createScaleProduct(
+      "MAIZE RICE",
+      `${props.filterScaleProduct("MAIZE RICE").toFixed(2)} kg`,
+      `${(
+        (props.filterScaleProduct("MAIZE RICE") /
+          (props.filteredCleanMaizeScada() - previous?.cleanMaizeScada)) *
+        100
+      ).toFixed(2)} %`
+    ),
+    createScaleProduct(
+      "BRAAI PAP",
+      `${props.filterScaleProduct("BRAAI PAP").toFixed(2)} kg`,
+      `${(
+        (props.filterScaleProduct("BRAAI PAP") /
+          (props.filteredCleanMaizeScada() - previous?.cleanMaizeScada)) *
+        100
+      ).toFixed(2)} %`
+    ),
+    createScaleProduct(
+      "SAMP",
+      `${props.filterScaleProduct("SAMP").toFixed(2)} kg`,
+      `${(
+        (props.filterScaleProduct("SAMP") /
+          (props.filteredCleanMaizeScada() - previous?.cleanMaizeScada)) *
+        100
+      ).toFixed(2)} %`
+    ),
+    createScaleProduct(
+      "KBL GRITS",
+      `${props.filterScaleProduct("KBL GRITS").toFixed(2)} kg`,
+      `${(
+        (props.filterScaleProduct("KBL GRITS") /
+          (props.filteredCleanMaizeScada() - previous?.cleanMaizeScada)) *
+        100
+      ).toFixed(2)} %`
+    ),
+    createScaleProduct(
+      "KERRY IMANA",
+      `${props.filterScaleProduct("KERRY IMANA").toFixed(2)} kg`,
+      `${(
+        (props.filterScaleProduct("KERRY IMANA") /
+          (props.filteredCleanMaizeScada() - previous?.cleanMaizeScada)) *
+        100
+      ).toFixed(2)} %`
+    ),
+    createScaleProduct(
+      "MEEZAN",
+      `${props.filterScaleProduct("MEEZAN").toFixed(2)} kg`,
+      `${(
+        (props.filterScaleProduct("MEEZAN") /
+          (props.filteredCleanMaizeScada() - previous?.cleanMaizeScada)) *
+        100
+      ).toFixed(2)} %`
+    ),
+    createScaleProduct(
+      "OFFAL *",
+      `${parseFloat(
+        props.filteredOffalScada() - previous?.offalScada,
+        10
+      ).toFixed(2)} kg`,
+      `${(
+        ((props.filteredOffalScada() - previous?.offalScada) /
+          (props.filteredCleanMaizeScada() - previous?.cleanMaizeScada)) *
+        100
+      ).toFixed(2)} %`
+    ),
+    //Intentional Space
+    createScaleProduct("", "", ""),
+    createScaleProduct(
+      "Group Total",
+      `${(
+        props.filterScaleProduct("SUPER") +
+        props.filterScaleProduct("SPECIAL") +
+        props.filterScaleProduct("SUPER FINE") +
+        props.filterScaleProduct("MAIZE RICE") +
+        props.filterScaleProduct("BRAAI PAP IMANA") +
+        props.filterScaleProduct("SAMP") +
+        props.filterScaleProduct("KBL GRITS") +
+        props.filterScaleProduct("KERRY IMANA") +
+        props.filterScaleProduct("MEEZAN") +
+        parseFloat(props.filteredOffalScada() - previous?.offalScada, 10)
+      ).toFixed(2)} kg`,
+      `${(
+        ((props.filterScaleProduct("SUPER") +
+          props.filterScaleProduct("SPECIAL") +
+          props.filterScaleProduct("SUPER FINE") +
+          props.filterScaleProduct("MAIZE RICE") +
+          props.filterScaleProduct("BRAAI PAP IMANA") +
+          props.filterScaleProduct("SAMP") +
+          props.filterScaleProduct("KBL GRITS") +
+          props.filterScaleProduct("KERRY IMANA") +
+          props.filterScaleProduct("MEEZAN") +
+          parseFloat(props.filteredOffalScada() - previous?.offalScada, 10)) /
+          (props.filteredCleanMaizeScada() - previous?.cleanMaizeScada)) *
+        100
+      ).toFixed(2)} %`
+    ),
+    //Intentional space
+    createScaleProduct("", "", ""),
+    createScaleProduct("", "", ""),
+
+    //Mix Back
+    createScaleProduct(
+      "Mixback 1: SUPER ",
+      `${props.filterScaleAByKey("ws46151")} kg`,
+      ""
+    ),
+    createScaleProduct(
+      "Mixback 2: SPECIAL ",
+      `${props.filterScaleAByKey("ws46152")} kg`,
+      ""
+    ),
+    createScaleProduct(
+      "Mixback 3: SUPER FINE ",
+      `${props.filterScaleAByKey("ws46153")} kg`,
+      ""
+    ),
+
+    //Intentional space
+    createScaleProduct("", "", ""),
+
+    //
+    createScaleProduct(
+      "Group Total",
+      `${(
+        props.filterScaleAByKey("ws46151") +
+        props.filterScaleAByKey("ws46152") +
+        props.filterScaleAByKey("ws46153")
+      ).toFixed(2)} kg`,
+      ""
+    ),
+  ];
 
   return (
     <Card>
@@ -2058,11 +2479,366 @@ const StepFour = (props) => {
             justifyContent: "left",
           }}
         >
-          Production Totals Mill A
+          Mill A
         </Typography>
-        <h4>Screening</h4>
-        {<h4>{props.filteredIntakeScada()}</h4>}
       </Grid>
+      {/** Scale Product */}
+      <h3
+        style={{
+          paddingLeft: "25px",
+        }}
+      >
+        MillProduction Totals
+      </h3>
+      <Grid container spacing={3} sx={{ p: 3, pt: 3 }}>
+        {/** Bags in Cage */}
+        <Grid item md={5} xs={12}>
+          <DisplayCard name={"2nd Conditioning Water Manual"} />
+        </Grid>
+        <Grid item md={4} xs={12}>
+          <Field name="conditioningWaterManual">
+            {({ field, meta }) => (
+              <TextField
+                {...field}
+                fullWidth
+                label="Conditioning Water Manual Measurement (L)"
+                variant="outlined"
+                error={meta.touched && meta.error}
+                helperText={meta.touched && meta.error ? meta.error : ""}
+              />
+            )}
+          </Field>
+        </Grid>
+      </Grid>
+      <TableContainer component={Paper} sx={{ p: 3 }}>
+        <Table sx={{ minWidth: 700 }} aria-label="customized table">
+          <StyledTableHead>
+            <TableRow>
+              <StyledTableCell align="left" sx={{ fontSize: 15 }}>
+                Product
+              </StyledTableCell>
+              <StyledTableCell align="center" sx={{ fontSize: 15 }}>
+                Previous Shift Measurement
+              </StyledTableCell>
+              <StyledTableCell align="center" sx={{ fontSize: 15 }}>
+                Current SCADA Measurment
+              </StyledTableCell>
+              <StyledTableCell align="center" sx={{ fontSize: 15 }}>
+                Total
+              </StyledTableCell>
+              <StyledTableCell align="right" sx={{ fontSize: 15 }}>
+                Extraction(%)
+              </StyledTableCell>
+            </TableRow>
+          </StyledTableHead>
+          <TableBody>
+            {rows.map((row) => (
+              <StyledTableRow key={row.product}>
+                <StyledBodyCell component="th" scope="row" align="left">
+                  {row.product}
+                </StyledBodyCell>
+                <StyledTableCell align="center">{row.previous}</StyledTableCell>
+                <StyledTableCell align="center">{row.scada} </StyledTableCell>
+                <StyledTableCell align="center">{row.total} </StyledTableCell>
+                <StyledBodyCell align="right">
+                  {row.extractionTemp}
+                </StyledBodyCell>
+              </StyledTableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
+      {/** Scale Product */}
+      <h3
+        style={{
+          paddingLeft: "25px",
+        }}
+      >
+        Mill A: Scale Products
+      </h3>
+      <TableContainer component={Paper} sx={{ p: 3 }}>
+        <Table sx={{ minWidth: 700 }} aria-label="customized table">
+          <StyledTableHead>
+            <TableRow>
+              <StyledTableCell align="left" sx={{ fontSize: 15 }}>
+                Product
+              </StyledTableCell>
+              <StyledTableCell align="center" sx={{ fontSize: 15 }}>
+                Total
+              </StyledTableCell>
+              <StyledTableCell align="center" sx={{ fontSize: 15 }}>
+                % Extraction
+              </StyledTableCell>
+            </TableRow>
+          </StyledTableHead>
+          <TableBody>
+            {scaleProduct.map((row) => (
+              <StyledTableRow key={row.product_}>
+                <StyledBodyCell component="th" scope="row" align="left">
+                  {row.product_}
+                </StyledBodyCell>
+                <StyledTableCell align="center">
+                  {row.sumOfDifferences_}
+                </StyledTableCell>
+                <StyledBodyCell align="right">{row.percentage_}</StyledBodyCell>
+              </StyledTableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
+
+      {/* <h4>{props.filterScaleProduct("MAIZE RICE")}</h4>
+      <h4>{props.filterScaleAByKey("ws44074")}</h4> */}
+    </Card>
+  );
+};
+
+const useStyles = makeStyles((theme) => ({
+  textField: {
+    backgroundImage: "linear-gradient(to right,#00A880, #93DA00 )", // Green gradient
+    borderRadius: 10, // Corner radius of 10px
+
+    "& .MuiOutlinedInput-root": {
+      "& fieldset": {
+        borderColor: "transparent", // Hide the default border
+        borderWidth: 0, // Set border width to 0 to remove the border
+      },
+    },
+  },
+}));
+
+const StepFive = (props) => {
+  const classes = useStyles();
+  // console.log("formik.values.downtimea :>> ", props.formik.values.downtimea);
+  // console.log("formik.values.downtimeb :>> ", props.formik.values.downtimeb);
+  const { formik } = props;
+  //Getting downtimes
+  useEffect(() => {
+    try {
+      props.downtimes
+        .filter((obj) => !!obj.durationoffa)
+        .forEach((downtime, i) => {
+          formik.setFieldValue(`downtimea.${i}.timestamp`, downtime.timestamp);
+          formik.setFieldValue(
+            `downtimea.${i}.duration`,
+            downtime.durationoffa
+          );
+          formik.setFieldValue(`downtimea.${i}.reason`, "");
+        });
+      props.downtimes
+        .filter((obj) => !!obj.durationoffb)
+        .forEach((downtime, i) => {
+          formik.setFieldValue(`downtimeb.${i}.timestamp`, downtime.timestamp);
+          formik.setFieldValue(
+            `downtimeb.${i}.duration`,
+            downtime.durationoffb
+          );
+          formik.setFieldValue(`downtimeb.${i}.reason`, "");
+        });
+    } catch (error) {
+      console.error("Failed to fetch options:", error);
+    }
+  }, []);
+
+  const handleONChangeA = (value, i) => {
+    formik.setFieldValue(`downtimea.${i}.reason`, value);
+  };
+  const handleONChangeB = (value, i) => {
+    formik.setFieldValue(`downtimeb.${i}.reason`, value);
+  };
+
+  return (
+    <Card>
+      <Grid item md={6} xs={12}>
+        <Typography
+          variant="h4"
+          sx={{
+            pl: 3,
+            pt: 2,
+            pb: 0,
+            alignItems: "left",
+            display: "flex",
+            justifyContent: "left",
+          }}
+        >
+          Downtimes
+        </Typography>
+      </Grid>
+
+      <h2 style={{ paddingLeft: "25px", color: "Green" }}>Mill A Downtimes</h2>
+
+      <FieldArray name="downtimea">
+        {({ push, remove, form }) => (
+          <div>
+            {props.formik.values.downtimea.map((downtime, i) => (
+              <Grid container spacing={3} sx={{ p: 3 }}>
+                {/* ID */}
+                <Grid item md={5} xs={12}>
+                  <>
+                    <Field name={`downtimea.${i}.timestamp`}>
+                      {/* <IdCard id={downtime.timestamp} /> */}
+                      {({ field, meta }) => (
+                        <TextField
+                          {...field}
+                          fullWidth
+                          variant="outlined"
+                          // helperText="Time Downtime Ended"
+                          value={`Downtime ended at ${new Date(
+                            downtime.timestamp
+                          ).toLocaleString("en-GB")}`}
+                          disabled
+                          sx={{
+                            "& .MuiInputBase-input.Mui-disabled": {
+                              WebkitTextFillColor: "#ffffff",
+                              fontWeight: "bold",
+                            },
+                            "& .MuiInputLabel-root": {
+                              color: "#ffffff",
+                              fontSize: "1rem",
+                              fontWeight: "bold",
+                            },
+                          }}
+                          className={classes.textField}
+                        />
+                      )}
+                    </Field>
+                  </>
+                </Grid>
+                {
+                  <Grid item md={4} xs={12}>
+                    <Field name={`downtimes.${i}.duration`}>
+                      {({ field, meta }) => (
+                        <TextField
+                          {...field}
+                          fullWidth
+                          // label="Duration"
+                          variant="outlined"
+                          value={`It lasted exactly ${downtime.duration}`}
+                          disabled
+                          sx={{
+                            "& .MuiInputBase-input.Mui-disabled": {
+                              WebkitTextFillColor: "#ffffff",
+                              fontWeight: "bold",
+                            },
+                            "& .MuiInputLabel-root": {
+                              color: "#ffffff",
+                              fontSize: "1rem",
+                              fontWeight: "bold",
+                            },
+                          }}
+                          className={classes.textField}
+                        />
+                      )}
+                    </Field>
+                  </Grid>
+                }
+                {
+                  <Grid item md={3} xs={12}>
+                    <Field name={`downtimes.${i}.reason`}>
+                      {({ field, meta }) => (
+                        <TextField
+                          {...field}
+                          fullWidth
+                          label="Reason"
+                          variant="outlined"
+                          onChange={(e) => handleONChangeA(e.target.value, i)}
+                        />
+                      )}
+                    </Field>
+                  </Grid>
+                }
+              </Grid>
+            ))}
+          </div>
+        )}
+      </FieldArray>
+      <h2 style={{ paddingLeft: "25px", color: "Green" }}>Mill B Downtimes</h2>
+
+      <FieldArray name="downtimeb">
+        {({ push, remove, form }) => (
+          <div>
+            {props.formik.values.downtimeb.map((downtime, i) => (
+              <Grid container spacing={3} sx={{ p: 3 }}>
+                {/* ID */}
+                <Grid item md={5} xs={12}>
+                  <>
+                    <Field name={`downtimeb.${i}.timestamp`}>
+                      {/* <IdCard id={downtime.id} /> */}
+                      {({ field, meta }) => (
+                        <TextField
+                          {...field}
+                          fullWidth
+                          // label="Time Downtime Ended"
+                          variant="outlined"
+                          value={`Downtime ended at ${new Date(
+                            downtime.timestamp
+                          ).toLocaleString("en-GB")}`}
+                          disabled
+                          sx={{
+                            "& .MuiInputBase-input.Mui-disabled": {
+                              WebkitTextFillColor: "#ffffff",
+                              fontWeight: "bold",
+                            },
+                            "& .MuiInputLabel-root": {
+                              color: "#ffffff",
+                              fontSize: "1rem",
+                              fontWeight: "bold",
+                            },
+                          }}
+                          className={classes.textField}
+                        />
+                      )}
+                    </Field>
+                  </>
+                </Grid>
+                {
+                  <Grid item md={4} xs={12}>
+                    <Field name={`downtimes.${i}.duration`}>
+                      {({ field, meta }) => (
+                        <TextField
+                          {...field}
+                          fullWidth
+                          // label="Duration"
+                          variant="outlined"
+                          value={`It lasted exactly ${downtime.duration}`}
+                          disabled
+                          sx={{
+                            "& .MuiInputBase-input.Mui-disabled": {
+                              WebkitTextFillColor: "#ffffff",
+                              fontWeight: "bold",
+                            },
+                            "& .MuiInputLabel-root": {
+                              color: "#ffffff",
+                              fontSize: "1rem",
+                              fontWeight: "bold",
+                            },
+                          }}
+                          className={classes.textField}
+                        />
+                      )}
+                    </Field>
+                  </Grid>
+                }
+                {
+                  <Grid item md={3} xs={12}>
+                    <Field name={`downtimes.${i}.reason`}>
+                      {({ field, meta }) => (
+                        <TextField
+                          {...field}
+                          fullWidth
+                          label="Reason"
+                          variant="outlined"
+                          onChange={(e) => handleONChangeB(e.target.value, i)}
+                        />
+                      )}
+                    </Field>
+                  </Grid>
+                }
+              </Grid>
+            ))}
+          </div>
+        )}
+      </FieldArray>
     </Card>
   );
 };
@@ -2074,10 +2850,23 @@ export default function StepperForm() {
   const steps = getSteps();
   const [files, setFiles] = useState([]);
   const [alertOpen, setAlertOpen] = useState(false);
-
   const [binMultipliers, setBinMultipliers] = useState([]);
   const [milla, setMilla] = useState(null);
   const [lastReport, setLastReport] = useState(null);
+  const [scale1Product, setScale1Product] = useState(null);
+  const [downtimes, setDowntimes] = useState([]);
+  const { id } = useParams();
+  //start time = From previous Report
+
+  const luxonData = lastReport?.endShiftTime
+    ? DateTime.fromISO(lastReport?.endShiftTime)
+    : "";
+
+  const formattedStartTime = luxonData
+    ? luxonData.toFormat("yyyy-MM-dd hh:mm:ss")
+    : "";
+  //End Time = Curerent Clock Time
+  const formattedEndTime = DateTime.now().toFormat("yyyy-MM-dd hh:mm:ss");
 
   //Getting Bin Multipliers
   useEffect(() => {
@@ -2093,11 +2882,26 @@ export default function StepperForm() {
     fetchBinsMultipliers();
   }, []);
 
+  // Getting previous Report
+
+  useEffect(() => {
+    const fetchPReviousReportValues = async () => {
+      try {
+        const response = await axios.get("http://localhost:4050/report/latest");
+        console.log("REPORT ===", response.data.data);
+        setLastReport(response.data.data);
+      } catch (error) {
+        console.error("Failed to fetch options:", error);
+      }
+    };
+    fetchPReviousReportValues();
+  }, []);
+
   //Getting latest scale reading Mill A
   useEffect(() => {
     const fetchMillaValues = async () => {
       try {
-        const response = await axios.get("http://localhost:4050/mill/latest");
+        const response = await axios.get("http://localhost:4050/milla/latest");
         setMilla(response.data.data);
       } catch (error) {
         console.error("Failed to fetch options:", error);
@@ -2108,7 +2912,22 @@ export default function StepperForm() {
     fetchMillaValues();
   }, []);
 
-  console.log("lastReport :>> ", lastReport);
+  //Getting Scale Product Mill A
+  useEffect(() => {
+    const fetchScaleAValues = async () => {
+      try {
+        const response = await axios.get(
+          "http://localhost:4050/scale1Products"
+        );
+        setScale1Product(response.data.data);
+      } catch (error) {
+        console.error("Failed to fetch options:", error);
+      }
+    };
+
+    fetchScaleAValues();
+  }, []);
+
   let authInfo = useAuth();
   // console.log("User Info", authInfo.user);
 
@@ -2126,25 +2945,77 @@ export default function StepperForm() {
     }
   };
 
+  //Getting Current Multiplier from Database
   const filterBin = (index) => {
     const data = binMultipliers.filter((e) => e.id === index);
     return data.length ? data[0]["multiplier"] : 1;
   };
 
-  //Getting WS2012_TT
+  //Getting Current Screening from Scada WS2012_TT (last value)
   const filteredScreeningScada = () => {
     const ws2012_tt = milla?.WS2012_TT || "0";
     return parseFloat(ws2012_tt, 10);
   };
-  //Getting WS2008_TT
+  //Getting Current Intake from Scada : WS2008_TT (last value)
   const filteredIntakeScada = () => {
     const ws2008_tt = milla?.WS2008_TT || "0";
     return parseFloat(ws2008_tt, 10);
   };
+  //Getting Current Conditioning Water from Scada: MC2039_LC_TT (last value)
+  const filteredConditioningWaterScada = () => {
+    const mc2039_tt = milla?.MC2039_LC_TT || "0";
+    return parseFloat(mc2039_tt, 10);
+  };
+  //Getting Current Clean Maize from Scada: MC2039_LC_TT (last value)
+  const filteredCleanMaizeScada = () => {
+    const ws2021_tt = milla?.WS2021_TT || "0";
+    return parseFloat(ws2021_tt, 10);
+  };
+  //Getting Current Offal from Scada: MC2039_LC_TT (last value)
+  const filteredOffalScada = () => {
+    const ws6002_tt = milla?.WS6002_TT || "0";
+    return parseFloat(ws6002_tt, 10);
+  };
 
-  const handleSubmit = async (values, { setSubmitting }) => {
+  const filterScaleAByKey = (key) => {
+    return scale1Product[key]?.value ?? 0;
+  };
+
+  //Getting TARGET NAME total from the Scale Product
+  const filterScaleProduct = (targetName) => {
+    const ignoreList = [
+      "ws46151",
+      "ws46152",
+      "ws46153",
+      "ws46154",
+      "ws46155",
+      "ws44651",
+      "ws44652",
+      "ws44653",
+      "ws44654",
+      "ws44655",
+    ];
+    // Initialize the sum of values to 0
+    let totalValue = 0;
+
+    // Loop through each entry in the payload
+    for (const key of Object.keys(scale1Product)) {
+      if (ignoreList.includes(key)) continue;
+
+      const entry = scale1Product[key];
+
+      // Check if the name matches the targetName
+      if (entry.name === targetName) {
+        // Add the value to the total
+        totalValue += entry.value;
+      }
+    }
+
+    // // Return the result as an object
+    return totalValue;
+  };
+  const handleSubmit = async (values) => {
     try {
-      console.log("submit values ===", values);
       //Create json data for the table
       const reportPayload = {
         //Project Detail Payload
@@ -2154,8 +3025,8 @@ export default function StepperForm() {
         employeeEmail: authInfo.user.email,
         employeeId: authInfo.user.id,
         shift: values.shift,
-        startShiftTime: values.startShiftTime,
-        endShiftTime: values.endShiftTime,
+        startShiftTime: formattedStartTime,
+        endShiftTime: formattedEndTime,
 
         //Bin Dips Payload
         //BIN1
@@ -2366,23 +3237,302 @@ export default function StepperForm() {
         //Intake
         intakeScada: filteredIntakeScada(),
         intakeTotal:
-          filteredIntakeScada() - parseFloat(lastReport?.intakeTotal, 10),
+          filteredIntakeScada() - parseFloat(lastReport?.intakeScada, 10),
 
         //Screening
         screeningScada: filteredScreeningScada(),
         screeningTotal:
-          filteredScreeningScada() - parseFloat(lastReport?.screeningTotal, 10),
-        screeningPercentage: 0,
+          filteredScreeningScada() - parseFloat(lastReport?.screeningScada, 10),
+        screeningPercentage: parseFloat(
+          (
+            (parseFloat(
+              filteredScreeningScada() - lastReport?.screeningScada,
+              10
+            ) /
+              parseFloat(filteredIntakeScada() - lastReport.intakeScada, 10)) *
+            100
+          ).toFixed(2),
+          10
+        ),
         //Dirty Maize
-        dirtyMaize: 0,
+        dirtyMaize: parseFloat(
+          (
+            parseFloat(filteredIntakeScada() - lastReport?.intakeScada, 10) +
+            lastReport?.sectionTotalE * 1000 -
+            (parseFloat(values?.metersMeasuredBinA1, 10) * filterBin(24) +
+              parseFloat(values?.metersMeasuredBinA2, 10) * filterBin(25) +
+              parseFloat(values?.metersMeasuredBinA3, 10) * filterBin(26) +
+              parseFloat(values?.metersMeasuredBinA4, 10) * filterBin(27)) *
+              1000
+          ).toFixed(2),
+          10
+        ),
+        //1st conditioning Water
+        conditioningWaterScada: filteredConditioningWaterScada(),
+        conditioningWaterTotal1: parseFloat(
+          (
+            filteredConditioningWaterScada() -
+            lastReport?.conditioningWaterScada
+          ).toFixed(2),
+          10
+        ),
+        conditioningWaterPercentage1: parseFloat(
+          (
+            (parseFloat(
+              filteredConditioningWaterScada() -
+                lastReport?.conditioningWaterScada,
+              10
+            ) /
+              ((parseFloat(
+                filteredIntakeScada() - lastReport?.intakeScada,
+                10
+              ) /
+                3) *
+                2)) *
+            100
+          ).toFixed(2),
+          10
+        ),
+        //cleanMaize
+        cleanMaizeScada: filteredCleanMaizeScada(),
+        cleanMaizeTotal: parseFloat(
+          parseFloat(
+            filteredCleanMaizeScada() - lastReport?.cleanMaizeScada,
+            10
+          ).toFixed(2),
+          10
+        ),
+        cleanMaizePercentage: parseFloat(
+          (
+            (parseFloat(
+              filteredScreeningScada() - lastReport?.screeningScada,
+              10
+            ) /
+              parseFloat(filteredIntakeScada() - lastReport?.intakeScada, 10)) *
+            100
+          ).toFixed(2),
+          10
+        ),
+        //2nd conditioningWater
+        conditioningWaterManual: parseFloat(
+          parseFloat(values?.conditioningWaterManual, 10).toFixed(2),
+          10
+        ),
+        conditioningWaterTotal2: parseFloat(
+          (
+            values?.conditioningWaterManual -
+            lastReport?.conditioningWaterManual
+          ).toFixed(2),
+          10
+        ),
+        conditioningWaterPercentage2: parseFloat(
+          (
+            (parseFloat(
+              values.conditioningWaterManual -
+                lastReport?.conditioningWaterManual,
+              10
+            ) /
+              ((parseFloat(
+                filteredIntakeScada() - lastReport?.intakeScada,
+                10
+              ) /
+                3) *
+                2)) *
+            100
+          ).toFixed(2),
+          10
+        ),
+
+        //Scale Product
+        //SUPER in Scale A
+        superMilla: parseFloat(filterScaleProduct("SUPER").toFixed(2), 10),
+        superMillaPercentage: parseFloat(
+          (
+            (filterScaleProduct("SUPER") /
+              (filteredCleanMaizeScada() - lastReport?.cleanMaizeScada)) *
+            100
+          ).toFixed(2),
+          10
+        ),
+        //SPECIAL in Scale A
+        specialMilla: parseFloat(filterScaleProduct("SPECIAL").toFixed(2), 10),
+        specialMillaPercentage: parseFloat(
+          (
+            (filterScaleProduct("SPECIAL") /
+              (filteredCleanMaizeScada() - lastReport?.cleanMaizeScada)) *
+            100
+          ).toFixed(2),
+          10
+        ),
+        //SUPER FINE in Scale A
+        superfineMilla: parseFloat(
+          filterScaleProduct("SUPER FINE").toFixed(2),
+          10
+        ),
+        superfineMillaPercentage: parseFloat(
+          (
+            (filterScaleProduct("SUPER FINE") /
+              (filteredCleanMaizeScada() - lastReport?.cleanMaizeScada)) *
+            100
+          ).toFixed(2),
+          10
+        ),
+        //MAIZE RICE in Scale A
+        maizericeMilla: parseFloat(
+          filterScaleProduct("MAIZE RICE").toFixed(2),
+          10
+        ),
+        maizericeMillaPercentage: parseFloat(
+          (
+            (filterScaleProduct("MAIZE RICE") /
+              (filteredCleanMaizeScada() - lastReport?.cleanMaizeScada)) *
+            100
+          ).toFixed(2),
+          10
+        ),
+        //BRAAI PAP in Scale A
+        braaipapMilla: parseFloat(
+          filterScaleProduct("BRAAI PAP").toFixed(2),
+          10
+        ),
+        braaipapMillaPercentage: parseFloat(
+          (
+            (filterScaleProduct("BRAAI PAP") /
+              (filteredCleanMaizeScada() - lastReport?.cleanMaizeScada)) *
+            100
+          ).toFixed(2),
+          10
+        ),
+        //SAMP in Scale A
+        sampMilla: parseFloat(filterScaleProduct("SAMP").toFixed(2), 10),
+        sampMillaPercentage: parseFloat(
+          (
+            (filterScaleProduct("SAMP") /
+              (filteredCleanMaizeScada() - lastReport?.cleanMaizeScada)) *
+            100
+          ).toFixed(2),
+          10
+        ),
+        //KBL GRITS in Scale A
+        kblgritsMilla: parseFloat(
+          filterScaleProduct("KBL GRITS").toFixed(2),
+          10
+        ),
+        kblgritsMillaPercentage: parseFloat(
+          (
+            (filterScaleProduct("KBL GRITS") /
+              (filteredCleanMaizeScada() - lastReport?.cleanMaizeScada)) *
+            100
+          ).toFixed(2),
+          10
+        ),
+        //KERRY IMANA in Scale A
+        kerryimanaMilla: parseFloat(
+          filterScaleProduct("KERRY IMANA").toFixed(2),
+          10
+        ),
+        kerryimanaMillaPercentage: parseFloat(
+          (
+            (filterScaleProduct("KERRY IMANA") /
+              (filteredCleanMaizeScada() - lastReport?.cleanMaizeScada)) *
+            100
+          ).toFixed(2),
+          10
+        ),
+        //MEEZAN in Scale A
+        meezanMilla: parseFloat(filterScaleProduct("MEEZAN").toFixed(2), 10),
+        meezanMillaPercentage: parseFloat(
+          (
+            (filterScaleProduct("MEEZAN") /
+              (filteredCleanMaizeScada() - lastReport?.cleanMaizeScada)) *
+            100
+          ).toFixed(2),
+          10
+        ),
+
+        //Offal
+        offalScada: filteredOffalScada(),
+        offalTotal: parseFloat(
+          parseFloat(filteredOffalScada() - lastReport?.offalScada, 10).toFixed(
+            2
+          ),
+          10
+        ),
+        offalPercentage: parseFloat(
+          (
+            (parseFloat(filteredOffalScada() - lastReport?.offalScada, 10) /
+              parseFloat(
+                filteredCleanMaizeScada() - lastReport?.cleanMaizeScada,
+                10
+              )) *
+            100
+          ).toFixed(2),
+          10
+        ),
+        //mixBack
+        mixbackA1: parseFloat(filterScaleAByKey("ws46151").toFixed(2), 10),
+        mixbackA2: parseFloat(filterScaleAByKey("ws46152").toFixed(2), 10),
+        mixbackA3: parseFloat(filterScaleAByKey("ws46153").toFixed(2), 10),
+
+        //Product totals Mill A
+
+        totalProductA: parseFloat(
+          (
+            filterScaleProduct("SUPER") +
+            filterScaleProduct("SPECIAL") +
+            filterScaleProduct("SUPER FINE") +
+            filterScaleProduct("MAIZE RICE") +
+            filterScaleProduct("BRAAI PAP IMANA") +
+            filterScaleProduct("SAMP") +
+            filterScaleProduct("KBL GRITS") +
+            filterScaleProduct("KERRY IMANA") +
+            filterScaleProduct("MEEZAN") +
+            parseFloat(filteredOffalScada() - lastReport?.offalScada, 10)
+          ).toFixed(2),
+          10
+        ),
+        totalProductPercentageA: parseFloat(
+          (
+            ((filterScaleProduct("SUPER") +
+              filterScaleProduct("SPECIAL") +
+              filterScaleProduct("SUPER FINE") +
+              filterScaleProduct("MAIZE RICE") +
+              filterScaleProduct("BRAAI PAP IMANA") +
+              filterScaleProduct("SAMP") +
+              filterScaleProduct("KBL GRITS") +
+              filterScaleProduct("KERRY IMANA") +
+              filterScaleProduct("MEEZAN") +
+              parseFloat(filteredOffalScada() - lastReport?.offalScada, 10)) /
+              (filteredCleanMaizeScada() - lastReport?.cleanMaizeScada)) *
+            100
+          ).toFixed(2),
+          10
+        ),
+        totalMixbackA: parseFloat(
+          (
+            filterScaleAByKey("ws46151") +
+            filterScaleAByKey("ws46152") +
+            filterScaleAByKey("ws46153")
+          ).toFixed(2),
+          10
+        ),
+        //downtimes
+        // downtimea: downtimes.map((downtime) => ({
+        //   id: downtime.id,
+        //   reason: "",
+        //   duration: downtime.durationoffa,
+        // })),
+        downtimea: values.downtimea,
+        downtimeb: values.downtimeb,
       };
 
-      console.log("intakeTotal :>> ", lastReport?.intakeTotal);
       console.log("JSON value check ===", reportPayload);
 
       // Send the form data to the server using your preferred API library (e.g., Axios)
 
-      // await axios.post("http://localhost:4050/addReport", reportPayload);
+      //await axios.post("http://localhost:4050/addReport", reportPayload);
+      await axios.get(`http://localhost:4050/reports/${lastReport?.id}/pdf`);
+
       // setAlertOpen(true);
 
       // Handle successful submission
@@ -2390,9 +3540,10 @@ export default function StepperForm() {
     } catch (error) {
       // Handle error
       console.error("Error submitting form:", error);
-    } finally {
-      setSubmitting(false);
     }
+    //finally {
+    //   setSubmitting(false);
+    // }
   };
   const handleAlertClose = () => {
     setAlertOpen(false);
@@ -2422,23 +3573,50 @@ export default function StepperForm() {
           }
           validateOnMount
         >
-          {({ isSubmitting, values }) => (
+          {(formik) => (
             <Form style={{ padding: "2rem" }} onChange={(e) => handleChange(e)}>
               {/* {stepComponents[activeStep]()} */}
-              {activeStep === 0 && <StepOne authInfo={authInfo} />}
+              {activeStep === 0 && (
+                <StepOne
+                  authInfo={authInfo}
+                  lastReport={lastReport}
+                  formattedEndTime={formattedEndTime}
+                />
+              )}
               {activeStep === 1 && (
                 <StepTwo
-                  values={values}
+                  values={formik.values}
                   filterBin={filterBin}
                   binMultipliers={binMultipliers}
                 />
               )}
-              {activeStep === 2 && <StepThree values={values} />}
+              {activeStep === 2 && <StepThree values={formik.values} />}
               {activeStep === 3 && (
                 <StepFour
+                  // setLastReport={setLastReport}
+                  values={formik.values}
+                  filterBin={filterBin}
                   filteredScreeningScada={filteredScreeningScada}
                   filteredIntakeScada={filteredIntakeScada}
-                  setLastReport={setLastReport}
+                  filteredConditioningWaterScada={
+                    filteredConditioningWaterScada
+                  }
+                  filteredCleanMaizeScada={filteredCleanMaizeScada}
+                  filteredOffalScada={filteredOffalScada}
+                  filterScaleProduct={filterScaleProduct}
+                  downtimes={downtimes}
+                  setDowntimes={setDowntimes}
+                  formattedStartTime={formattedStartTime}
+                  formattedEndTime={formattedEndTime}
+                  formik={formik}
+                  filterScaleAByKey={filterScaleAByKey}
+                />
+              )}
+              {activeStep === 4 && (
+                <StepFive
+                  values={formik.values}
+                  downtimes={downtimes}
+                  formik={formik}
                 />
               )}
               <Box pt={2}>
@@ -2457,7 +3635,8 @@ export default function StepperForm() {
                     sx={{ ml: 2 }}
                     variant="contained"
                     color="primary"
-                    disabled={isSubmitting}
+                    disabled={formik.isSubmitting}
+                    // onClick={handleSubmit}
                   >
                     Finish
                   </Button>

@@ -23,7 +23,7 @@ const projectRoutes = [
     auth: authRoles.admin,
   },
   {
-    path: `/report/:id/edit`,
+    path: `/report/:reportId/edit`,
     element: <ProjectView />,
     auth: authRoles.admin,
   },

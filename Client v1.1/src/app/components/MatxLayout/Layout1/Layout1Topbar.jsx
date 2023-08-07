@@ -109,7 +109,7 @@ const Layout1Topbar = () => {
             <Icon>menu</Icon>
           </StyledIconButton>
           <StyledIconButton to="/home">
-            <img src="../assets/images/pcs2.png" alt="" width="100px" />
+            <img src="../assets/images/pmc.webp" alt="" width="100px" />
           </StyledIconButton>
 
           {/* <img

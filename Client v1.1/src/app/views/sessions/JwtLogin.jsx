@@ -1,5 +1,6 @@
 import { LoadingButton } from "@mui/lab";
 import { Card, Checkbox, Grid, TextField } from "@mui/material";
+import { makeStyles } from "@mui/styles";
 import { Box, styled, useTheme } from "@mui/system";
 import { Paragraph } from "app/components/Typography";
 import useAuth from "app/hooks/useAuth";
@@ -7,7 +8,6 @@ import { Formik } from "formik";
 import { useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import * as Yup from "yup";
-import { makeStyles } from "@mui/styles";
 
 const FlexBox = styled(Box)(() => ({ display: "flex", alignItems: "center" }));
 
@@ -27,7 +27,7 @@ const useStyles = makeStyles({
 });
 
 const JWTRoot = styled(JustifyBox)(() => ({
-  background: "linear-gradient(to right bottom, #022861, #022861)",
+  background: "linear-gradient(to right bottom, #012E0C, #012E0C)",
   minHeight: "100% !important",
   "& .card": {
     maxWidth: 800,
@@ -84,7 +84,7 @@ const JwtLogin = () => {
         <Grid container sx={{ color: "white" }}>
           <Grid item sm={6} xs={12}>
             <JustifyBox p={4} height="100%" sx={{ minWidth: 320 }}>
-              <img src="/assets/images/xC23_3.png" width="100%" alt="" />
+              <img src="/assets/images/pmcRound.png" width="100%" alt="" />
             </JustifyBox>
           </Grid>
 
@@ -224,9 +224,9 @@ const JwtLogin = () => {
                           justifyContent: "center",
                         }}
                       >
-                        <a href="https://pcsglobal.com">
+                        <a href="https://simplifiedas.co.za">
                           <img
-                            src="/assets/images/poweredBy.png"
+                            src="/assets/images/sas2.png"
                             width="70%"
                             alt=""
                           />
